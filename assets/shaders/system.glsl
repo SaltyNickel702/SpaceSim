@@ -2,6 +2,7 @@
 out vec4 color;
 in vec2 pxlPosIn;
 
+float lastTime;
 uniform float Time;
 uniform vec2 ScreenDim;
 
@@ -40,6 +41,18 @@ mat4 rotateZ(float angle) {
     );
 }
 
+//Space Objects
+struct Object {
+    vec2 pos;
+    vec2 vel;
+    float mass;
+    float radius;
+    vec4 color;
+}
+struct Path {
+    vec2 pos[512];
+    vec4 color;
+}
 
 
 void main()
@@ -48,4 +61,6 @@ void main()
 	adjPxlPos.y *= ScreenDim.y/ScreenDim.x; //Scale to match screen aspect ratio
 	
 	color = vec4(0);	
+
+    lastTime = Time;
 }
