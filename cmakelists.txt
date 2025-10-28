@@ -1,0 +1,29 @@
+cmake_minimum_required(VERSION 3.31)
+
+project(SpaceSim)
+set(EXE_NAME "SpaceSim")
+
+set(PRODUCTION_BUILD False)
+
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}")
+
+set(SRC_DIR "${CMAKE_SOURCE_DIR}/src")
+file(GLOB_RECURSE SOURCES "${SRC_DIR}/*.cpp")
+
+if (PRODUCTION_BUILD)
+	add_executable(${EXE_NAME} WIN32 ${SOURCES} ${APP_ICON_RESOURCE_WINDOWS}) # add WIN32 to create the windows application w/out console
+else()
+	add_executable(${EXE_NAME} ${SOURCES} ${APP_ICON_RESOURCE_WINDOWS})
+endif()
+
+
+include_directories("${CMAKE_SOURCE_DIR}/include")
+set(LIB_DIR "${CMAKE_SOURCE_DIR}/libraries")
+target_link_libraries(${EXE_NAME}
+	"${LIB_DIR}/libglfw3.a"
+	"${LIB_DIR}/libglad.a"
+)

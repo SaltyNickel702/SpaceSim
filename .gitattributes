@@ -1,0 +1,7 @@
+build/** linguist-generated=true
+include/** linguist-vendored=true
+statLib/** linguist-vendored=true
+
+**.bat linguist-ignored=true
+
+**.md linguist-documentation=true
