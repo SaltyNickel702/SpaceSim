@@ -68,7 +68,10 @@ struct Space {
             cout << 2 << endl;
             //Uniforms
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, objSSBO);
-            glUniform1f(glGetUniformLocation(render.shaders["simulation"]->ID, "Time"), glfwGetTime());
+            float currentTime = glfwGetTime();
+            glUniform1f(glGetUniformLocation(render.shaders["simulation"]->ID, "Time"), currentTime);
+            glUniform1f(glGetUniformLocation(render.shaders["simulation"]->ID, "lastTime"), lastTickTime);
+            lastTickTime = currentTime;
 
             cout << 3 << endl;
             //Dispatch
