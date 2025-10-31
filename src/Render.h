@@ -18,99 +18,165 @@
 using namespace std;
 
 
-class Shader {
-		public:
-			unsigned int ID;
+namespace Shader {
+	struct Shader {
+		unsigned int ID = 0;
+		bool readyToRun = false;
 
-			Shader (const std::string vertexPath, const std::string fragmentPath) {
-				using namespace std;
-				#include <iostream>
+		virtual void compile () {};
 
-				string vertexCode;
-				string fragmentCode;
+		virtual ~Shader () {
+			if (ID != 0) glDeleteProgram(ID);
+		}
+	};
+	struct VF : Shader {
+		VF (string vertexPath,  string fragmentPath) : vP(vertexPath), fP(fragmentPath) {}
+		string vP, fP;
 
-				ifstream vShader;
-				ifstream fShader;
+		void compile () override {
+			cout << "Starting Compiling" << endl;
 
-				vShader.exceptions(ifstream::failbit | ifstream::badbit);
-				fShader.exceptions(ifstream::failbit | ifstream::badbit);
+			string vertexCode;
+			string fragmentCode;
 
-				//Read Files
-				try {
-					vShader.open("./assets/shaders/" + vertexPath);
-					fShader.open("./assets/shaders/" + fragmentPath);
+			ifstream vShader;
+			ifstream fShader;
 
-					stringstream vShaderStream, fShaderStream;
-					vShaderStream << vShader.rdbuf();
-					fShaderStream << fShader.rdbuf();
+			vShader.exceptions(ifstream::failbit | ifstream::badbit);
+			fShader.exceptions(ifstream::failbit | ifstream::badbit);
 
-					vShader.close();
-					fShader.close();
+			//Read Files
+			try {
+				vShader.open("./assets/shaders/" + vP);
+				fShader.open("./assets/shaders/" + fP);
 
-					vertexCode = vShaderStream.str();
-					fragmentCode = fShaderStream.str();
-				} catch (ifstream::failure e) {
-					cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ" <<endl;
-				}
-				const char* vertexCString = vertexCode.c_str();
-				const char* fragmentCString = fragmentCode.c_str();
+				stringstream vShaderStream, fShaderStream;
+				vShaderStream << vShader.rdbuf();
+				fShaderStream << fShader.rdbuf();
 
+				vShader.close();
+				fShader.close();
 
-				//Compile Shaders
-				unsigned int vertex, fragment;
-				int success;
-				char infoLog[512];
-
-				//Vertex
-				vertex = glCreateShader(GL_VERTEX_SHADER);
-				glShaderSource(vertex,1,&vertexCString,NULL);
-				glCompileShader(vertex);
-
-				glGetShaderiv(vertex,GL_COMPILE_STATUS,&success);
-				if (!success) {
-					glGetShaderInfoLog(vertex,512,NULL,infoLog);
-					cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << endl;
-				}
-
-				//fragment
-				fragment = glCreateShader(GL_FRAGMENT_SHADER);
-				glShaderSource(fragment,1,&fragmentCString,NULL);
-				glCompileShader(fragment);
-
-				glGetShaderiv(fragment,GL_COMPILE_STATUS,&success);
-				if (!success) {
-					glGetShaderInfoLog(fragment,512,NULL,infoLog);
-					cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << endl;
-				}
-
-				
-				//Program Creation
-				ID = glCreateProgram();
-				glAttachShader(ID,vertex);
-				glAttachShader(ID,fragment);
-				glLinkProgram(ID);
-
-				glGetProgramiv(ID,GL_LINK_STATUS,&success);
-				if (!success) {
-					glGetShaderInfoLog(fragment,512,NULL,infoLog);
-					cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << endl;
-				}
-
-				glDeleteShader(vertex);
-				glDeleteShader(fragment);
-			};
-
-			~Shader () {
-				glDeleteProgram(ID);
+				vertexCode = vShaderStream.str();
+				fragmentCode = fShaderStream.str();
+			} catch (ifstream::failure e) {
+				cerr << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ\n" <<endl;
 			}
-		};
+			const char* vertexCString = vertexCode.c_str();
+			const char* fragmentCString = fragmentCode.c_str();
+
+
+			//Compile Shaders
+			unsigned int vertex, fragment;
+			int success;
+			char infoLog[512];
+
+			//Vertex
+			vertex = glCreateShader(GL_VERTEX_SHADER);
+			glShaderSource(vertex,1,&vertexCString,NULL);
+			glCompileShader(vertex);
+
+			glGetShaderiv(vertex,GL_COMPILE_STATUS,&success);
+			if (!success) {
+				glGetShaderInfoLog(vertex,512,NULL,infoLog);
+				cerr << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << endl;
+			}
+
+			//fragment
+			fragment = glCreateShader(GL_FRAGMENT_SHADER);
+			glShaderSource(fragment,1,&fragmentCString,NULL);
+			glCompileShader(fragment);
+
+			glGetShaderiv(fragment,GL_COMPILE_STATUS,&success);
+			if (!success) {
+				glGetShaderInfoLog(fragment,512,NULL,infoLog);
+				cerr << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << endl;
+			}
+
+			
+			//Program Creation
+			ID = glCreateProgram();
+			glAttachShader(ID,vertex);
+			glAttachShader(ID,fragment);
+			glLinkProgram(ID);
+
+			glGetProgramiv(ID,GL_LINK_STATUS,&success);
+			if (!success) {
+				glGetShaderInfoLog(fragment,512,NULL,infoLog);
+				cerr << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << endl;
+			}
+
+			glDeleteShader(vertex);
+			glDeleteShader(fragment);
+
+			readyToRun = true;
+		}
+	};
+	struct Compute : Shader {
+		Compute (string computePath) : cP(computePath) {}
+		string cP;
+
+		void compile () override {
+			string computeCode;
+
+			ifstream cFile;
+
+			cFile.exceptions(ifstream::failbit | ifstream::badbit);
+
+			//Read Files
+			try {
+				cFile.open("./assets/shaders/" + cP);
+
+				stringstream cFilStream, fShaderStream;
+				cFilStream << cFile.rdbuf();
+
+				cFile.close();
+
+				computeCode = cFilStream.str();
+			} catch (ifstream::failure e) {
+				cerr << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ\n" <<endl;
+			}
+			const char* computeSource = computeCode.c_str();
+
+
+			//Compile
+			GLuint computeShader = glCreateShader(GL_COMPUTE_SHADER);
+			glShaderSource(computeShader, 1, &computeSource, nullptr);
+			glCompileShader(computeShader);
+
+			// Check for compile errors
+			GLint success;
+			glGetShaderiv(computeShader, GL_COMPILE_STATUS, &success);
+			if (!success) {
+				char infoLog[512];
+				glGetShaderInfoLog(computeShader, 512, nullptr, infoLog);
+				cerr << "ERROR::SHADER::COMPUTE::COMPILATION_FAILED\n" << infoLog << std::endl;
+			}
+
+			
+			//Link
+			ID = glCreateProgram();
+			glAttachShader(ID, computeShader);
+			glLinkProgram(ID);
+
+			// Check for link errors
+			glGetProgramiv(ID, GL_LINK_STATUS, &success);
+			if (!success) {
+				char infoLog[512];
+				glGetProgramInfoLog(ID, 512, nullptr, infoLog);
+				cerr << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+			}
+		}
+	};
+}
 struct Render {
 	static vector<Render*> renderStructs;
-	map<string,Shader*> shaders;
+	map<string,Shader::Shader> shaders;
 	thread* renderThread;
 	GLFWwindow* window;
 	int width, height;
 	atomic<bool> loopBreaker{false};
+	vector<function<void()>> tickQueue;
 
 	struct Object {
 		Object () = delete;
@@ -201,25 +267,32 @@ struct Render {
 	};
 	vector<Object*> objects;
 	
+	struct Script {
+		Script () = delete;
+		Script (Render& r, string name) : render(r), run([](){}) {
+			r.scripts[name] = this;
+		}
+		function<void()> run;
+
+		Render& render;
+	};
+	map<string, Script*> scripts;
+
 	Render () : Render(800,600) {}
 	Render (int w, int h) : width(w), height(h), renderThread(nullptr), window(nullptr) {
 		renderStructs.push_back(this);
 		renderThread = new thread(&init, this);
 	}
 
-	Shader* compileShader (string name, string vert, string frag) {
-		shaders[name] = nullptr;
-		ShaderData s{name,vert,frag};
-		shaderQueue.push_back(s);
-		return shaders[name];
+	Shader::Shader* compileShader (string name, Shader::Shader shader) {
+		shaders[name] = shader;
+		shaderQueue.push_back(&shaders[name]);
+		return &shaders[name];
 	}
-
 
 	~Render () {
 		auto it = find(renderStructs.begin(), renderStructs.end(), this);
 		if (it != renderStructs.end()) renderStructs.erase(it);
-
-		//shaders are deleted at end of loop
 	}
 
 	std::atomic<bool> scriptTicked {false}; //Tells render to reset keystroke buffer
@@ -250,14 +323,13 @@ struct Render {
 
 		//Shader Gen
 		struct ShaderData {
-			string name, vert, frag;
+			string name;
+			Shader::Shader shader;
 		};
-		vector<ShaderData> shaderQueue;
+		vector<Shader::Shader*> shaderQueue;
 		void generateShaders () {
-			if (shaderQueue.size() == 0) return;
-			for (ShaderData sd : shaderQueue) {
-				Shader* s = new Shader(sd.vert, sd.frag);
-				shaders[sd.name] = s;
+			for (Shader::Shader* s : shaderQueue) {
+				s->compile();
 			}
 			shaderQueue.clear();
 		}
@@ -296,8 +368,8 @@ struct Render {
 			glCullFace(GL_BACK);
 			glFrontFace(GL_CCW);
 
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-			glfwSetCursorPos(window,0,0);
+			// glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+			// glfwSetCursorPos(window,0,0);
 
 			loop();
 		}
@@ -309,6 +381,15 @@ struct Render {
 
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+				//Run scripts
+				for (function<void()> f : tickQueue) { //single run functions
+					f();
+				}
+				tickQueue.clear();
+				for (auto& [name,s] : scripts) { //every tick
+					s->run();
+				}
+
 				//Update and Draw meshes
 				for (Object* o : objects) {
 					if (o->flagReady) o->updateBuffers();
@@ -317,12 +398,6 @@ struct Render {
 
 				glfwSwapBuffers(window);
 			}
-
-			//Delete Shaders
-			for (auto& [key, ptr] : shaders) {
-				delete ptr;
-			}
-			shaders.clear();
 
 			glfwTerminate();
 		}

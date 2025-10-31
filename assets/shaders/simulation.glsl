@@ -1,15 +1,30 @@
-#version 330 core
-out vec4 color;
-in vec2 pxlPosIn;
+#version 430 core
+layout(local_size_x = 128) in;
 
-float lastTime;
+// Space Objects
+struct Path {
+    vec2 pos[512];
+    vec4 color;
+};
+
+struct Object {
+    vec2 pos;
+    vec2 vel;
+    float mass;
+    float radius;
+    vec4 color;
+    Path path;
+};
+
+layout(std430, binding = 0) buffer ObjectBuffer {
+    Object objects[];
+};
+
 uniform float Time;
-uniform vec2 ScreenDim;
 
 #define PI 3.14159265359
 
-
-//Math Func
+// Math Func
 mat4 rotateX(float angle) {
     float c = cos(angle);
     float s = sin(angle);
@@ -41,26 +56,11 @@ mat4 rotateZ(float angle) {
     );
 }
 
-//Space Objects
-struct Object {
-    vec2 pos;
-    vec2 vel;
-    float mass;
-    float radius;
-    vec4 color;
-}
-struct Path {
-    vec2 pos[512];
-    vec4 color;
-}
-
 
 void main()
 {
-	vec2 adjPxlPos = pxlPosIn;
-	adjPxlPos.y *= ScreenDim.y/ScreenDim.x; //Scale to match screen aspect ratio
-	
-	color = vec4(0);	
+    uint i = gl_GlobalInvocationID.x;
+    if (i >= ObjectCount) return;
 
-    lastTime = Time;
+    // --- do your simulation work on objects[i] here ---
 }
