@@ -171,7 +171,7 @@ namespace Shader {
 }
 struct Render {
 	static vector<Render*> renderStructs;
-	map<string,Shader::Shader> shaders;
+	map<string,Shader::Shader*> shaders;
 	thread* renderThread;
 	GLFWwindow* window;
 	int width, height;
@@ -284,10 +284,10 @@ struct Render {
 		renderThread = new thread(&init, this);
 	}
 
-	Shader::Shader* compileShader (string name, Shader::Shader shader) {
+	Shader::Shader* compileShader (string name, Shader::Shader* shader) {
 		shaders[name] = shader;
-		shaderQueue.push_back(&shaders[name]);
-		return &shaders[name];
+		shaderQueue.push_back(shader);
+		return shader;
 	}
 
 	~Render () {

@@ -44,29 +44,31 @@ struct Space {
         camera.zoom = 1;
         camera.screenDim = vec2(w,h);
 
-        render.compileShader("simulation", Shader::Compute("simulation.glsl"));
-        render.compileShader("drawPoints", Shader::VF("pointVert.glsl","pointFrag.glsl"));
+        render.compileShader("simulation", new Shader::Compute("simulation.glsl"));
+        render.compileShader("drawPoints", new Shader::VF("pointVert.glsl","pointFrag.glsl"));
 
         render.tickQueue.push_back([this]() {
+            cout << "ticked" << endl;
             //Generate object ssbo
             glGenBuffers(1, &objSSBO);
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, objSSBO);
 
-            glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GLObjects::Object) * objects.size(), nullptr, GL_DYNAMIC_DRAW);
+            glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GLObjects::Object) * (objects.size() ? objects.size() : 1), nullptr, GL_DYNAMIC_DRAW);
 
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
         });
 
         Render::Script* pipeline = new Render::Script (render, "pipeline");
         pipeline->run = [this]() {
+            if (objects.size() == 0) return;
             cout << 1 << endl;
             //Compute Simulation
-            glUseProgram(render.shaders["simulation"].ID);
+            glUseProgram(render.shaders["simulation"]->ID);
 
             cout << 2 << endl;
             //Uniforms
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, objSSBO);
-            glUniform1f(glGetUniformLocation(render.shaders["simulation"].ID, "Time"), glfwGetTime());
+            glUniform1f(glGetUniformLocation(render.shaders["simulation"]->ID, "Time"), glfwGetTime());
 
             cout << 3 << endl;
             //Dispatch
@@ -83,11 +85,11 @@ struct Space {
             //Draw Everything
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, objSSBO);
 
-            glUniform2fv(glGetUniformLocation(render.shaders["drawPoints"].ID, "camera.pos"), 1, value_ptr(camera.pos));
-            glUniform1d(glGetUniformLocation(render.shaders["drawPoints"].ID, "camera.zoom"), camera.zoom);
-            glUniform2fv(glGetUniformLocation(render.shaders["drawPoints"].ID, "camera.screenDim"), 1, value_ptr(camera.screenDim));
+            glUniform2fv(glGetUniformLocation(render.shaders["drawPoints"]->ID, "camera.pos"), 1, value_ptr(camera.pos));
+            glUniform1d(glGetUniformLocation(render.shaders["drawPoints"]->ID, "camera.zoom"), camera.zoom);
+            glUniform2fv(glGetUniformLocation(render.shaders["drawPoints"]->ID, "camera.screenDim"), 1, value_ptr(camera.screenDim));
 
-            glUseProgram(render.shaders["drawPoints"].ID);
+            glUseProgram(render.shaders["drawPoints"]->ID);
             glDrawArrays(GL_POINTS, 0, objects.size());
             cout << 6 << endl;
         };
@@ -108,15 +110,15 @@ struct Space {
 int main () {
     Space space(800,600);
 
-    // GLObjects::Object obj;
-    // obj.pos = vec2(0,0);
-    // obj.vel = vec2(0,0);
-    // obj.mass = 1;
-    // obj.radius = 100;
-    // obj.color = vec4(1,1,1,1);
-    // vector<GLObjects::Object> objs = {obj};
-    // space.objects = objs;
-    // space.rebufferObjects();
+    GLObjects::Object obj;
+    obj.pos = vec2(0,0);
+    obj.vel = vec2(0,0);
+    obj.mass = 1;
+    obj.radius = 100;
+    obj.color = vec4(1,1,1,1);
+    vector<GLObjects::Object> objs = {obj};
+    space.objects = objs;
+    space.rebufferObjects();
 
     space.render.renderThread->join();
     return 0;

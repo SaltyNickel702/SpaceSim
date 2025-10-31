@@ -60,7 +60,7 @@ mat4 rotateZ(float angle) {
 void main()
 {
     uint i = gl_GlobalInvocationID.x;
-    if (i >= ObjectCount) return;
+    if (i >= objects.length()) return;
 
     // --- do your simulation work on objects[i] here ---
 }
