@@ -1,6 +1,8 @@
 #ifndef RENDER_H
 #define RENDER_H
 
+// #define DEBUG 0
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -14,6 +16,7 @@
 #include <fstream>
 #include <sstream>
 #include <functional>
+#include <memory>
 
 using namespace std;
 
@@ -337,14 +340,16 @@ struct Render {
 		void init () {
 			//Initialize
 			glfwInit();
-			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); //Set Version
+			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4); //Set Version
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //Use core version of OpenGL
-			glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 			glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+			#if defined(DEBUG)
+			glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+			#endif
 
 			//Create GLFW window
-			window = glfwCreateWindow(width, height, "Raytracing", NULL, NULL); //Size, title, monitor, shared recourses
+			window = glfwCreateWindow(width, height, "Space Sim", NULL, NULL); //Size, title, monitor, shared recourses
 			if (window == NULL) {
 				cout << "Failed to create GLFW window" << endl;
 				glfwTerminate();
@@ -359,6 +364,22 @@ struct Render {
 				cout << "Failed to initialize GLAD" << endl;
 				return;// -1;
 			}
+		
+			#if defined(DEBUG)
+			cout << "Enabling debug" << endl;
+			glEnable(GL_DEBUG_OUTPUT);
+			glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+			cout << "Set flags" << endl;
+			glDebugMessageCallback([](GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
+				cerr << "GL DEBUG: type=" << type << " severity=" << severity << " msg=" << message;
+				GLint currentProgram = 0;
+				glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
+				std::cout << " Active Program ID: " << currentProgram << std::endl;
+			}, nullptr);
+			cout << "Added callback" << endl;
+			#endif
+
+			glEnable(GL_PROGRAM_POINT_SIZE);
 
 			//Sets GL Viewport (camera)
 			glViewport(0, 0, width, height);

@@ -1,17 +1,13 @@
 #version 430 core
 
-struct Path {
-    vec2 pos[512];
-    vec4 color;
-};
-
 struct Object {
     vec2 pos;
     vec2 vel;
     float mass;
     float radius;
     vec4 color;
-    Path path;
+    int flagDelete;
+    float pad0;
 };
 
 layout(std430, binding = 0) buffer ObjectBuffer {
@@ -20,7 +16,7 @@ layout(std430, binding = 0) buffer ObjectBuffer {
 
 struct Camera {
     vec2 pos;
-    double zoom; //if errors, use float instead
+    float zoom;
     vec2 screenDim;
 };
 uniform Camera camera;
@@ -32,10 +28,10 @@ void main() {
 
     vec2 pos = objects[id].pos - camera.pos;  // adjust by camera position
     pos = pos / camera.zoom;                  // meters to pixels
-    pos = pos / camera.screenDim * 2.0 - vec2(1.0, 1.0); // normalize to clip space
+    pos = pos / camera.screenDim * 2.0; // normalize to clip space
 
-    gl_Position = vec4(pos, 0.0, 1.0);
-    gl_PointSize = objects[id].radius / camera.zoom;
+    gl_Position = vec4(pos,0,1);
+    gl_PointSize = 2 * objects[id].radius / camera.zoom;
 
     colorIn = objects[id].color;
 }
