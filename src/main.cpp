@@ -155,19 +155,19 @@ struct Space {
 
 
 int main () {
-    Space space(1600,1000);
+    Space space(1200,900);
 
     GLObjects::Object sun;
     sun.pos = vec2(0,0);
-    sun.mass = 20000;
+    sun.mass = 30000;
     sun.radius = 4;
-    sun.color = vec4(1,1,0,1);
+    sun.color = vec4(1,.8,0,1);
     vector<GLObjects::Object> objs = {sun};
 
     srand(time(0));
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < 2000; i++) {
         GLObjects::Object o;
-        o.mass = pow((rand() % 25)/24,5)*24 + 1;
+        o.mass = pow((rand() % 30)/29,5)*29 + 1;
         o.radius = pow( (3 * o.mass) / (4 * M_PI * 75) ,1.0/3.0) + 0.25;
 
         float randDeg = rand() % 360;
@@ -177,12 +177,12 @@ int main () {
         o.pos = vec2(cos(radians(randDeg)),sin(radians(randDeg))) * randDist;
 
         // float randSpd = rand() % ((int) sqrt((sun.mass)/randDist));
-        float randSpd = sqrt(sun.mass / randDist);
+        float randSpd = sqrt(sun.mass / randDist);// * ((rand() % 2 == 0 )? -1 : 1); //uncomment for 50-50 chance at oribiting opposite way
         float tanDeg = ((int)randDeg + 90) % 360;
         o.vel = vec2(cos(radians(tanDeg)),sin(radians(tanDeg))) * randSpd;
 
-        float r1 = rand();
-        o.color = vec4(1) * (r1 / (float)RAND_MAX * 0.5f) + 0.5f;
+        o.color = vec4(1) * (rand() / (float)RAND_MAX * 0.5f) + 0.5f;
+        // o.color = vec4(rand() / (float) RAND_MAX,rand() / (float) RAND_MAX,rand() / (float) RAND_MAX,1);
 
         // cout << o.pos.x << " " << o.pos.y << endl;
 

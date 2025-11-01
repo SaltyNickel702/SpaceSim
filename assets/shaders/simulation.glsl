@@ -62,6 +62,7 @@ mat4 rotateZ(float angle) {
 vec2 getGravity (uint i1, uint i2) {
     Object o1 = objects[i1];
     Object o2 = objects[i2];
+    if (o1.flagDelete == 1 || o2.flagDelete == 1) return vec2(0);
 
     float f = G * (o1.mass * o2.mass) / pow(length(o1.pos-o2.pos),2); //magnitude of force
     vec2 dirNorm = normalize(o2.pos-o1.pos);
@@ -80,12 +81,11 @@ void simulateBody (uint id)
                 //Proportionaly join velocities
                 O(id).vel = (O(id).vel * O(id).mass + O(i).vel * O(i).mass) / (O(id).mass + O(i).mass);
 
-
                 float den = O(id).mass / (4.0/3.0 * PI * pow(O(id).radius,3));
-
                 O(id).mass += O(i).mass;
-
                 O(id).radius = pow( (3 * O(id).mass) / (4 * PI * den) ,1.0/3.0);
+
+                O(id).color = (O(id).color * O(id).mass + O(i).color * O(i).mass) / (O(id).mass + O(i).mass);
             } else O(id).flagDelete = 1;
         }
 
