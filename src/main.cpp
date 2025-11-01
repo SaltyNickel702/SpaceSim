@@ -164,26 +164,23 @@ int main () {
     sun.color = vec4(1,1,0,1);
     vector<GLObjects::Object> objs = {sun};
 
+    srand(time(0));
     for (int i = 0; i < 1000; i++) {
         GLObjects::Object o;
-        srand(time(0) + i);
         o.mass = pow((rand() % 25)/24,5)*24 + 1;
         o.radius = pow( (3 * o.mass) / (4 * M_PI * 75) ,1.0/3.0) + 0.25;
 
-        srand(rand() + time(0));
         float randDeg = rand() % 360;
-        srand(rand() + time(0));
-        float randDist = pow(rand() % (int)pow(170,2), 0.5) + 30;
+        float t = rand() / (float)RAND_MAX; // [0,1]
+        float randDist = cbrtf(t) * 170.0f + 30.0f;
 
         o.pos = vec2(cos(radians(randDeg)),sin(radians(randDeg))) * randDist;
 
-        srand(rand() + time(0));
         // float randSpd = rand() % ((int) sqrt((sun.mass)/randDist));
         float randSpd = sqrt(sun.mass / randDist);
         float tanDeg = ((int)randDeg + 90) % 360;
         o.vel = vec2(cos(radians(tanDeg)),sin(radians(tanDeg))) * randSpd;
 
-        srand(rand() + time(0));
         float r1 = rand();
         o.color = vec4(1) * (r1 / (float)RAND_MAX * 0.5f) + 0.5f;
 
