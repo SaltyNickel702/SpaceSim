@@ -19,6 +19,7 @@ layout(std430, binding = 0) buffer ObjectBuffer {
 
 uniform float Time;
 uniform float lastTime;
+uniform float timeScale;
 float dTime;
 
 
@@ -103,7 +104,7 @@ void main()
     uint i = gl_GlobalInvocationID.x; //index
     if (i >= objects.length()) return;
 
-    dTime = Time - lastTime;
+    dTime = timeScale * (Time - lastTime);
 
     simulateBody(i);
 
