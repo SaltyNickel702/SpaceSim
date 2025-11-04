@@ -75,11 +75,13 @@ void simulateBody (uint id)
     for (int i = 0; i < objects.length(); i++) {
         if (i == id) continue;
         float dist = length(O(id).pos - O(i).pos);
-        if (dist <= O(id).radius + O(i).radius) {
+        if (dist <= O(id).radius + O(i).radius) { //collides
             // O(id).color.w = O(id).radius;
             if (O(id).mass > O(i).mass || O(i).flagDelete == 1) { //join masses together
                 //Proportionaly join velocities
                 O(id).vel = (O(id).vel * O(id).mass + O(i).vel * O(i).mass) / (O(id).mass + O(i).mass);
+                
+                O(id).pos = (O(id).pos * O(id).mass + O(i).pos * O(i).mass) / (O(id).mass + O(i).mass);
 
                 float den = O(id).mass / (4.0/3.0 * PI * pow(O(id).radius,3));
                 O(id).mass += O(i).mass;
@@ -87,9 +89,7 @@ void simulateBody (uint id)
 
                 O(id).color = (O(id).color * O(id).mass + O(i).color * O(i).mass) / (O(id).mass + O(i).mass);
             } else O(id).flagDelete = 1;
-        }
-
-        force += getGravity(id,i);
+        } else force += getGravity(id,i);
     }
 
     vec2 acl = force / O(id).mass;
